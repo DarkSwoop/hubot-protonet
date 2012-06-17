@@ -8,8 +8,7 @@ Net          = require('net')
 Qs = require('qs')
 
 class Protonet extends Adapter
-  send: (received_data, strings...) ->
-    console.log 'sending: ' + JSON.stringify(received_data)
+  send: (user, strings...) ->
     self = @
     strings.forEach (str) =>
       textExtension = ''
@@ -27,7 +26,7 @@ class Protonet extends Adapter
         }
 
       if @node_version > 300
-        @bot.write {"operation":"meep.create", "payload":{"channel_id":received_data.channel_id, "author":self.robot.name, "text_extension":textExtension, "message":str, "user_id":@bot.userId}}
+        @bot.write {"operation":"meep.create", "payload":{"channel_id":user.room, "author":self.robot.name, "text_extension":textExtension, "message":str, "user_id":@bot.userId}}
       else
         console.log 'send prior version 300'
         options =
@@ -37,7 +36,7 @@ class Protonet extends Adapter
           auth     : @user + ':' + @password
           path     : '/api/v1/meeps'
 
-        postData = Qs.stringify {"operation":"meep.create","message":str,"channel_id":received_data.channel_id, "text_extension":textExtension}
+        postData = Qs.stringify {"operation":"meep.create","message":str,"channel_id":user.room, "text_extension":textExtension}
         req = HTTP.request options, (response) ->
           response.setEncoding 'utf8'
           response.on 'data',  (chunk) ->
@@ -45,9 +44,9 @@ class Protonet extends Adapter
         req.write postData
         req.end()
       
-  reply: (received_data, strings...) ->
+  reply: (user, strings...) ->
     strings.forEach (str) =>
-      @send received_data, "@#{received_data.author} #{str}"
+      @send user, "@#{user.name} #{str}"
 
   run: ->
     self = @
@@ -85,11 +84,13 @@ class Protonet extends Adapter
         name_regexp = new RegExp "^@#{escaped_name}", 'i'
         content = message.message.replace(name_regexp, self.robot.name)
         
-        self.receive new Robot.TextMessage message, content
+        user = self.userForId "#{message.node_id}_#{message.user_id}", name: message.author, room: message.channel_id
+        
+        self.receive new Robot.TextMessage user, content
 
     bot.on "EnterMessage", (message) ->
       unless self.robot.name == message.author
-        self.receive new Robot.EnterMessage message.name
+        self.receive new Robot.EnterMessage message.author
 
     bot.on "LeaveMessage", (message) ->
       unless self.robot.name == message.author
