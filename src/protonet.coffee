@@ -63,6 +63,7 @@ class Protonet extends Adapter
       @node_host        = options.node_host
       @node_port        = options.node_port
       @node_version        = options.node_version
+      self.robot.name   = options.user
     else
       throw new Error("Not enough parameters provided. I need a user, a password and a node host")
 
