@@ -5,7 +5,7 @@
     "email": "benny@digitalbehr.de"
   },
   "description": "protonet adapter for hubot",
-  "version": "0.9.9",
+  "version": "0.9.9.1",
   "dependencies": {
     "qs": ">=0.5.0"
   },
