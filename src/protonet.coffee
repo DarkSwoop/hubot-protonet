@@ -85,7 +85,12 @@ class Protonet extends Adapter
         name_regexp = new RegExp "^@#{escaped_name}", 'i'
         content = message.message.replace(name_regexp, self.robot.name)
         
-        user = self.userForId "#{message.node_id}_#{message.user_id}_#{message.channel_id}", name: message.author, room: message.channel_id
+        user_id = 0
+        if message.remote_user_id?
+          user_id = message.remote_user_id
+        else
+          user_id = "#{message.node_id}_#{message.user_id}_#{message.channel_id}"
+        user = self.userForId user_id, name: message.author, room: message.channel_id
         
         self.receive new Robot.TextMessage user, content
 
